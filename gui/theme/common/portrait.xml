@@ -3864,6 +3864,9 @@
 
 			<listbox style="advanced_listbox">
 				<placement x="%indent%" y="%row13a_y%" w="%content_width%" h="%listbox_advanced_height%"/>
+				<listitem name="Essentials">
+					<action function="page">m11q_essentials</action>
+				</listitem>
 				<listitem name="{@change_twrp_folder_btn=Change TWRP folder}">
 					<condition var1="tw_is_decrypted" var2="1"/>
 					<action function="page">changeTwrpFolder</action>
@@ -5842,6 +5845,117 @@
 					<action function="page">main</action>
 				</actions>
 			</action>
+		</page>
+		<page name="m11q_essentials">
+			<template name="page"/>
+			<text style="text_l">
+				<placement x="%col1_x_header%" y="%row3_header_y%"/>
+				<text>Essentials</text>
+			</text>
+			<button style="main_button_half_height">
+				<placement x="%indent%" y="%row2a_y%"/>
+				<text>Disable FBE</text>
+				<actions>
+					<action function="queueclear"/>
+					<action function="set">tw_back=m11q_essentials</action>
+					<action function="set">tw_filename=/addon/decrypt.zip</action>
+					<action function="set">tw_action=queuezip</action>
+					<action function="set">tw_action_param=</action>
+					<action function="set">tw_has_action2=1</action>
+					<action function="set">tw_action2=flash</action>
+					<action function="set">tw_action2_param=m11q_fbe_install</action>
+					<action function="set">tw_operation_state=0</action>
+					<action function="set">tw_text1=Disable FBE for Samsung M11?</action>
+					<action function="set">tw_text2=Changing mode requires Format Data.</action>
+					<action function="set">tw_text3=Format Data erases internal storage.</action>
+					<action function="set">tw_text4=Format manually before booting Android.</action>
+					<action function="set">tw_slider_text=Swipe to Disable FBE</action>
+					<action function="page">confirm_action</action>
+				</actions>
+			</button>
+			<button style="main_button_half_height">
+				<placement x="%center_x%" y="%row2a_y%"/>
+				<text>Enable FBE</text>
+				<actions>
+					<action function="queueclear"/>
+					<action function="set">tw_back=m11q_essentials</action>
+					<action function="set">tw_filename=/addon/encrypt.zip</action>
+					<action function="set">tw_action=queuezip</action>
+					<action function="set">tw_action_param=</action>
+					<action function="set">tw_has_action2=1</action>
+					<action function="set">tw_action2=flash</action>
+					<action function="set">tw_action2_param=m11q_fbe_install</action>
+					<action function="set">tw_operation_state=0</action>
+					<action function="set">tw_text1=Enable FBE for Samsung M11?</action>
+					<action function="set">tw_text2=Changing mode requires Format Data.</action>
+					<action function="set">tw_text3=Format Data erases internal storage.</action>
+					<action function="set">tw_text4=Format manually before booting Android.</action>
+					<action function="set">tw_slider_text=Swipe to Enable FBE</action>
+					<action function="page">confirm_action</action>
+				</actions>
+			</button>
+			<text style="text_m">
+				<placement x="%center_x%" y="%row8_y%" placement="5"/>
+				<text>Changing mode requires Format Data.</text>
+			</text>
+			<text style="text_m">
+				<placement x="%center_x%" y="%row9_y%" placement="5"/>
+				<text>Format Data erases internal storage.</text>
+			</text>
+			<text style="text_m">
+				<placement x="%center_x%" y="%row11_y%" placement="5"/>
+				<text>Wipe &gt; Format Data &gt; type YES</text>
+			</text>
+			<text style="text_m">
+				<placement x="%center_x%" y="%row13_y%" placement="5"/>
+				<text>Then reboot Recovery before System.</text>
+			</text>
+			<action><touch key="back"/><action function="page">advanced</action></action>
+			<action><touch key="home"/><action function="page">main</action></action>
+		</page>
+		<page name="m11q_fbe_install">
+			<template name="page"/>
+			<text style="text_l">
+				<placement x="%col1_x_header%" y="%row3_header_y%"/>
+				<text>Essentials</text>
+			</text>
+			<template name="console"/>
+			<template name="progress_bar"/>
+			<action>
+				<condition var1="tw_operation_state" var2="1"/>
+				<action function="page">m11q_fbe_done</action>
+			</action>
+		</page>
+		<page name="m11q_fbe_done">
+			<template name="page"/>
+			<text style="text_l">
+				<placement x="%col1_x_header%" y="%row3_header_y%"/>
+				<text>Essentials</text>
+			</text>
+			<text style="text_m_fail">
+				<condition var1="tw_operation_status" op="!=" var2="0"/>
+				<placement x="%col1_x_header%" y="%row4_header_y%"/>
+				<text>{@failed=Failed}</text>
+			</text>
+			<text style="text_m">
+				<condition var1="tw_operation_status" var2="0"/>
+				<placement x="%col1_x_header%" y="%row4_header_y%"/>
+				<text>{@successful=Successful}</text>
+			</text>
+			<template name="console"/>
+			<button style="main_button_half_height">
+				<placement x="%indent%" y="%row21a_y%"/>
+				<text>{@back_btn=Back}</text>
+				<actions>
+					<action function="set">tw_clear_destination=m11q_essentials</action>
+					<action function="page">clear_vars</action>
+				</actions>
+			</button>
+			<action><touch key="back"/><actions>
+				<action function="set">tw_clear_destination=m11q_essentials</action>
+				<action function="page">clear_vars</action>
+			</actions></action>
+			<action><touch key="home"/><action function="page">main</action></action>
 		</page>
 	</pages>
 </recovery>

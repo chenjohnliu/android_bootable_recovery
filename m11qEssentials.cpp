@@ -432,8 +432,8 @@ bool BackupEfs() {
     return false;
   if (!VerifiedSave(dir + "/sec_efs.img", image))
     return false;
-  gui_print("sec_efs backed up once. /efs and /sec_efs are aliases; no "
-            "automatic restore.\n");
+  gui_print("sec_efs.img backed up. Restore with Sec EFS Image; "
+            "the separate efs partition is not included.\n");
   return true;
 }
 bool PreventStockRestore() {

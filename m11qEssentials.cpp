@@ -808,19 +808,19 @@ bool MagiskInstall() {
   Bytes apk, boot;
   string target, error, dir, fingerprint = Fingerprint();
   Bytes wrapper, script;
-  if (!Read("/addon/magisk-25.2.zip", apk, 32 * 1024 * 1024) ||
-      Hash(apk) != "0bdc32918b6ea502dca769b1c7089200da51ea1def170824c2812925b426d509" ||
+  if (!Read("/addon/magisk-30.7.zip", apk, 32 * 1024 * 1024) ||
+      Hash(apk) != "e0d32d2123532860f97123d927b1bb86c4e08e6fd8a48bfc6b5bee0afae9ebd5" ||
       !Read("/addon/quokka-magisk.zip", wrapper, 1024 * 1024) ||
-      Hash(wrapper) != "570f2854bf6e17a992b10fc0289957723df35dec879e84df310ed6dfd30024eb" ||
+      Hash(wrapper) != "df72610d10110db58ca3b70dd563f96b56ab42569f24734c57afc29cfdebd065" ||
       !Read("/addon/quokka-magisk-updater.sh", script, 1024 * 1024) ||
-      Hash(script) != "4c9ef4c7f27762d862ca70c908edcdfb217d9e719f5130dc2e6929bf69fcd02b")
+      Hash(script) != "84157455f4099214c70a6fc1044e45926c2f8e6d50e77c1ac88b1e251ef70643")
     return Fail("Bundled Magisk checksum mismatch");
   if (!ReadBoot(target, boot) || !m11q::Le32(boot, 16))
     return Fail(
         "No supported boot ramdisk. Use the Magisk App image patching method.");
-  if (!Session("magisk-25.2", dir) || !BootSnapshot(dir, boot, fingerprint))
+  if (!Session("magisk-30.7", dir) || !BootSnapshot(dir, boot, fingerprint))
     return false;
-  gui_print("Installing Magisk 25.2 into boot. Encryption/verity are retained; "
+  gui_print("Installing Magisk 30.7 into boot. Encryption/verity are retained; "
             "recovery/vbmeta are not installer targets.\n");
   struct Env {
     string key, value;

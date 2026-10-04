@@ -5,6 +5,7 @@
 #include "gui/gui.hpp"
 #include "m11qBootHeader.hpp"
 #include "m11qModuleState.hpp"
+#include "m11qAvb.hpp"
 #include "partitions.hpp"
 #include "twinstall.h"
 #include "twrp-functions.hpp"
@@ -171,6 +172,22 @@ bool VerificationDisabled() {
                 "vbmeta; use a ROM-supported image-patching method.");
   return true;
 }
+bool UnlockedForBootEdit() {
+  if (!m11q::BootloaderUnlocked(android::base::GetProperty("ro.boot.vbmeta.device_state", ""),
+                               android::base::GetProperty("ro.boot.verifiedbootstate", "")))
+    return Fail("Bootloader unlock state is not confirmed. No boot or vbmeta changes.");
+  return true;
+}
+bool RomHashtreeDisabled() {
+  string target;
+  Bytes vbmeta;
+  uint32_t flags;
+  if (!Block("vbmeta", target) || !Read(target, vbmeta) || !m11q::AvbFlags(vbmeta,flags))
+    return Fail("Cannot validate current top-level vbmeta.");
+  if (!m11q::AvbHashtreeDisabled(flags))
+    return Fail("ROM hashtree verification is enabled. Use AVB / DM-Verity before modifying stock restore files.");
+  return true;
+}
 bool MkdirTree(const string &path) {
   if (path.empty() || path[0] != '/')
     return false;
@@ -313,12 +330,12 @@ bool ReadBoot(string &path, Bytes &b) {
          (m11q::ValidBoot(b, error) || Fail(error));
 }
 bool Flash(const string &path, const Bytes &original, const Bytes &updated,
-           bool headerOnly = false) {
+           bool headerOnly = false, const string &label = "Boot") {
   if (updated.size() != original.size())
     return Fail("Image size changed unexpectedly");
   Fd fd(open(path.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW));
   if (fd.n < 0)
-    return Fail("Cannot open boot for writing");
+    return Fail("Cannot open " + label + " for writing");
   auto write = [&](const Bytes &data) {
     return headerOnly ? WriteBytes(fd.n, data.data() + 64, 512, 64) &&
                             WriteBytes(fd.n, data.data() + 608, 1024, 608)
@@ -326,10 +343,10 @@ bool Flash(const string &path, const Bytes &original, const Bytes &updated,
   };
   Bytes check;
   if (write(updated) && Read(path, check) && Hash(check) == Hash(updated)) {
-    gui_print("Boot write and full readback verified. Reboot manually.\n");
+    gui_print("%s write and full readback verified. Reboot manually.\n", label.c_str());
     return true;
   }
-  gui_print("Write/readback failed; restoring saved boot bytes...\n");
+  gui_print("Write/readback failed; restoring saved %s bytes...\n", label.c_str());
   bool restored =
       write(original) && Read(path, check) && Hash(check) == Hash(original);
   gui_print("Rollback %s. Persistent backup is retained.\n",
@@ -436,8 +453,53 @@ bool BackupEfs() {
             "the separate efs partition is not included.\n");
   return true;
 }
+bool AvbStatus() {
+  string target;
+  Bytes current;
+  uint32_t flags;
+  if (!Block("vbmeta",target) || !Read(target,current) || !m11q::AvbFlags(current,flags))
+    return Fail("Cannot validate current top-level vbmeta.");
+  gui_print("AVB flags: %u. Verification: %s. Hashtree: %s.\n", flags,
+            flags & 2 ? "disabled" : "enabled",
+            m11q::AvbHashtreeDisabled(flags) ? "disabled" : "enabled");
+  gui_print("Bootloader state: %s / %s. FBE settings are separate.\n",
+            android::base::GetProperty("ro.boot.vbmeta.device_state", "unknown").c_str(),
+            android::base::GetProperty("ro.boot.verifiedbootstate", "unknown").c_str());
+  return true;
+}
+bool PrepareAvb() {
+  if (!UnlockedForBootEdit()) return false;
+  string target, boot_target, dir;
+  Bytes original, changed, boot;
+  uint32_t flags;
+  if (!Block("vbmeta", target) || !Read(target,original) ||
+      !m11q::AvbFlags(original,flags) || !m11q::PrepareAvb(original,changed))
+    return Fail("Unsupported top-level vbmeta. No changes.");
+  if (flags == 3) {
+    gui_print("AVB verification and hashtree are already disabled. No changes.\n");
+    return true;
+  }
+  if (!ReadBoot(boot_target,boot) || !Session("avb-prepare",dir) ||
+      !Space(dir,boot.size()+original.size()*2) ||
+      !VerifiedSave(dir+"/vbmeta-original.img",original) ||
+      !VerifiedSave(dir+"/vbmeta-disabled.img",changed) ||
+      !BootSnapshot(dir,boot,Fingerprint())) return false;
+  string metadata = "quokka-avb-v1\noriginal="+Hash(original)+"\nprepared="+Hash(changed)+
+      "\nflags-before="+std::to_string(flags)+"\nflags-after=3\n";
+  if (!Save(dir+"/avb.meta",metadata) || !Save(dir+"/RESTORE.txt",
+      "Keep these images with the matching firmware. After changing boot or ROM files, "
+      "do not re-enable verification by restoring vbmeta alone. Restore the complete "
+      "matching stock firmware when returning to verified stock.\n")) return false;
+  gui_print("Preparing the current vbmeta; only its verification flags change.\n"
+            "The original signature will no longer match; unlocked bootloader is required.\n"
+            "Data encryption and partition layout are unchanged.\n");
+  if (!Flash(target,original,changed,false,"VBMeta")) return false;
+  gui_print("AVB prepared. Keep TWRP may now check and disable detected restore files.\n"
+            "Reboot manually; stock boot compatibility still requires testing.\n");
+  return true;
+}
 bool PreventStockRestore() {
-  if (!VerificationDisabled())
+  if (!UnlockedForBootEdit())
     return false;
   string dir;
   if (!Session("stock-restore", dir))
@@ -483,6 +545,7 @@ bool PreventStockRestore() {
               "KG status was not modified.\n");
     return true;
   }
+  if (!RomHashtreeDisabled()) return false;
   // Complete backups before the first ROM modification.
   string manifest;
   for (size_t i = 0; i < targets.size(); ++i) {
@@ -734,7 +797,7 @@ bool Diagnostics() {
   return ok;
 }
 bool MagiskInstall() {
-  if (!VerificationDisabled())
+  if (!UnlockedForBootEdit())
     return false;
   Bytes apk, boot;
   string target, error, dir, fingerprint = Fingerprint();
@@ -809,6 +872,10 @@ int M11qEssentials(const string &operation) {
     ok = BackupEfs();
   else if (operation == "stock-restore")
     ok = PreventStockRestore();
+  else if (operation == "avb-status")
+    ok = AvbStatus();
+  else if (operation == "avb-prepare")
+    ok = PrepareAvb();
   else if (operation == "mount-rw")
     ok = MountRw();
   else if (operation == "modules-list") {

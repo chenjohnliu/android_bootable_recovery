@@ -3081,15 +3081,30 @@ bool TWPartitionManager::Flash_Image(string& path, string& filename) {
 		if (M11qExtraImageTarget(flash_part->Mount_Point)) {
 			M11qImageFile image;
 			const string volume_path = M11qImageVolume(flash_part->Mount_Point);
+			const bool logical_target = !M11qLogicalImageVolume(flash_part->Mount_Point).empty();
+			const string physical_block = M11qPhysicalImageBlock(flash_part->Mount_Point);
+			dev_t physical_device = 0;
 			TWPartition* volume = volume_path.empty() ? NULL : Find_Partition_By_Path(volume_path);
-			if (!volume_path.empty() && (!volume || !volume->Is_Super)) {
+			if (logical_target && (!volume || !volume->Is_Super)) {
 				gui_err("m11q_img_mapper=Logical image target is unavailable.");
 				return false;
 			}
-			// Bind this alias to the live logical volume, not an old by-name symlink.
+			// Physical aliases must match the existing filesystem and exact by-name block.
+			if (!physical_block.empty()) {
+				struct stat expected{}, configured{};
+				if (volume) volume->Find_Actual_Block_Device();
+				if (!volume || volume->Is_Super || stat(physical_block.c_str(), &expected) ||
+					!S_ISBLK(expected.st_mode) || stat(volume->Actual_Block_Device.c_str(), &configured) ||
+					!S_ISBLK(configured.st_mode) || configured.st_rdev != expected.st_rdev) {
+					gui_err("m11q_img_physical=Physical image target does not match its filesystem partition.");
+					return false;
+				}
+				physical_device = expected.st_rdev;
+			}
+			// Bind aliases to the live volume. Preserve physical names for the identity check.
 			if (volume) {
 				volume->Find_Actual_Block_Device();
-				flash_part->Set_Block_Device(volume->Actual_Block_Device);
+				flash_part->Set_Block_Device(physical_block.empty() ? volume->Actual_Block_Device : physical_block);
 			}
 			flash_part->Find_Actual_Block_Device();
 			int target = open(flash_part->Actual_Block_Device.c_str(), O_RDONLY | O_CLOEXEC);
@@ -3097,6 +3112,7 @@ bool TWPartitionManager::Flash_Image(string& path, string& filename) {
 			uint64_t capacity = 0;
 			int readonly = 1;
 			bool target_ok = target >= 0 && !fstat(target, &target_stat) && S_ISBLK(target_stat.st_mode) &&
+				(physical_block.empty() || target_stat.st_rdev == physical_device) &&
 				!ioctl(target, BLKGETSIZE64, &capacity) && !ioctl(target, BLKROGET, &readonly);
 			if (target >= 0) close(target);
 			if (!target_ok || readonly) {
@@ -3120,7 +3136,7 @@ bool TWPartitionManager::Flash_Image(string& path, string& filename) {
 			}
 			// UnMount can return success under never-unmount-system: check actual state too.
 			if (volume && (!volume->UnMount(true) || volume->Is_Mounted())) {
-				gui_err("m11q_img_mounted=Cannot flash a mounted logical partition.");
+				gui_err("m11q_img_mounted=Cannot flash a mounted filesystem partition.");
 				return false;
 			}
 			string mountinfo;

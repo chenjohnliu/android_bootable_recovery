@@ -12,8 +12,21 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-inline std::string M11qImageVolume(const std::string& point) {
+inline std::string M11qLogicalImageVolume(const std::string& point) {
     for (const char* name : {"system", "vendor", "product", "odm"})
+        if (point == std::string("/") + name + "_image") return std::string("/") + name;
+    return "";
+}
+inline std::string M11qPhysicalImageBlock(const std::string& point) {
+    for (const char* name : {"persist", "optics", "prism", "efs", "sec_efs"})
+        if (point == std::string("/") + name + "_image")
+            return std::string("/dev/block/bootdevice/by-name/") + name;
+    return "";
+}
+inline std::string M11qImageVolume(const std::string& point) {
+    const std::string logical = M11qLogicalImageVolume(point);
+    if (!logical.empty()) return logical;
+    for (const char* name : {"persist", "optics", "prism", "efs", "sec_efs"})
         if (point == std::string("/") + name + "_image") return std::string("/") + name;
     return "";
 }

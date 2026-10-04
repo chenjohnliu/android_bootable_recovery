@@ -336,7 +336,8 @@ bool ReadBoot(string &path, Bytes &b) {
          (m11q::ValidBoot(b, error) || Fail(error));
 }
 bool Flash(const string &path, const Bytes &original, const Bytes &updated,
-           bool headerOnly = false, const string &label = "Boot") {
+           bool headerOnly = false, const string &label = "Boot",
+           bool persistentBackup = true) {
   if (updated.size() != original.size())
     return Fail("Image size changed unexpectedly");
   Fd fd(open(path.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW));
@@ -355,8 +356,9 @@ bool Flash(const string &path, const Bytes &original, const Bytes &updated,
   gui_print("Write/readback failed; restoring saved %s bytes...\n", label.c_str());
   bool restored =
       write(original) && Read(path, check) && Hash(check) == Hash(original);
-  gui_print("Rollback %s. Persistent backup is retained.\n",
-            restored ? "verified" : "FAILED");
+  gui_print("Rollback %s. %s\n", restored ? "verified" : "FAILED",
+            persistentBackup ? "Persistent backup is retained."
+                             : "No persistent backup was created.");
   return Fail("Boot change failed");
 }
 bool Selinux(const string &mode) {
@@ -473,7 +475,7 @@ bool AvbStatus() {
             android::base::GetProperty("ro.boot.verifiedbootstate", "unknown").c_str());
   return true;
 }
-bool PrepareAvb() {
+bool PrepareAvb(bool backup = true) {
   if (!UnlockedForBootEdit()) return false;
   string target, boot_target, dir;
   Bytes original, changed, boot;
@@ -485,31 +487,34 @@ bool PrepareAvb() {
     gui_print("AVB verification and hashtree are already disabled. No changes.\n");
     return true;
   }
-  if (!ReadBoot(boot_target,boot) || !Session("avb-prepare",dir) ||
+  if (backup) {
+    if (!ReadBoot(boot_target,boot) || !Session("avb-prepare",dir) ||
       !Space(dir,boot.size()+original.size()*2) ||
       !VerifiedSave(dir+"/vbmeta-original.img",original) ||
       !VerifiedSave(dir+"/vbmeta-disabled.img",changed) ||
-      !BootSnapshot(dir,boot,Fingerprint())) return false;
-  string metadata = "quokka-avb-v1\noriginal="+Hash(original)+"\nprepared="+Hash(changed)+
+        !BootSnapshot(dir,boot,Fingerprint())) return false;
+    string metadata = "quokka-avb-v1\noriginal="+Hash(original)+"\nprepared="+Hash(changed)+
       "\nflags-before="+std::to_string(flags)+"\nflags-after=3\n";
-  if (!Save(dir+"/avb.meta",metadata) || !Save(dir+"/RESTORE.txt",
+    if (!Save(dir+"/avb.meta",metadata) || !Save(dir+"/RESTORE.txt",
       "Keep these images with the matching firmware. After changing boot or ROM files, "
       "do not re-enable verification by restoring vbmeta alone. Restore the complete "
-      "matching stock firmware when returning to verified stock.\n")) return false;
+        "matching stock firmware when returning to verified stock.\n")) return false;
+  } else {
+    gui_print("Backup skipped by explicit choice. Original vbmeta bytes are "
+              "held in memory only for this operation.\n");
+  }
   gui_print("Preparing the current vbmeta; only its verification flags change.\n"
             "The original signature will no longer match; unlocked bootloader is required.\n"
             "Data encryption and partition layout are unchanged.\n");
-  if (!Flash(target,original,changed,false,"VBMeta")) return false;
+  if (!Flash(target,original,changed,false,"VBMeta",backup)) return false;
   gui_print("AVB prepared. Keep TWRP may now check and disable detected restore files.\n"
             "Reboot manually; stock boot compatibility still requires testing.\n");
   return true;
 }
-bool PreventStockRestore() {
+bool PreventStockRestore(bool backup = true) {
   if (!UnlockedForBootEdit())
     return false;
   string dir;
-  if (!Session("stock-restore", dir))
-    return false;
   std::vector<std::unique_ptr<RomMount>> mounts;
   std::vector<string> targets;
   for (const string &point :
@@ -552,19 +557,24 @@ bool PreventStockRestore() {
     return true;
   }
   if (!RomHashtreeDisabled()) return false;
-  // Complete backups before the first ROM modification.
+  if (backup && !Session("stock-restore", dir)) return false;
+  if (!backup)
+    gui_print("External backup skipped by explicit choice. Restore files "
+              "will be renamed in place, not deleted.\n");
+  // Validate every target; complete requested backups before ROM changes.
   string manifest;
   for (size_t i = 0; i < targets.size(); ++i) {
     Bytes data;
     string p = targets[i];
     if (Exists(p + ".quokka-disabled"))
       return Fail("Existing disabled backup: " + p);
-    if (!Read(p, data, 32 * 1024 * 1024) || !Space(dir, data.size()) ||
-        !VerifiedSave(dir + "/file-" + std::to_string(i), data))
+    if (!Read(p, data, 32 * 1024 * 1024) ||
+        (backup && (!Space(dir, data.size()) ||
+         !VerifiedSave(dir + "/file-" + std::to_string(i), data))))
       return false;
     manifest += p + " " + Hash(data) + "\n";
   }
-  if (!Save(dir + "/files.txt", manifest))
+  if (backup && !Save(dir + "/files.txt", manifest))
     return false;
   // Upgrade only mounts containing files that will actually be changed.
   for (auto &mount : mounts) {
@@ -592,8 +602,8 @@ bool PreventStockRestore() {
     for (size_t i = 0; i < done; ++i)
       rename((targets[i] + ".quokka-disabled").c_str(), targets[i].c_str());
     sync();
-    return Fail("Could not disable all restore files; rollback attempted, "
-                "backups retained");
+    return Fail(backup ? "Could not disable all restore files; rollback attempted, backups retained"
+                       : "Could not disable all restore files; rollback attempted, no external backup");
   }
   sync();
   gui_print("Stock restore files disabled. vaultkeeperd unchanged; no claim "
@@ -802,11 +812,11 @@ bool Diagnostics() {
   }
   return ok;
 }
-bool MagiskInstall() {
+bool MagiskInstall(bool backup = true) {
   if (!UnlockedForBootEdit())
     return false;
   Bytes apk, boot;
-  string target, error, dir, fingerprint = Fingerprint();
+  string target, error, dir, fingerprint = backup ? Fingerprint() : "";
   Bytes wrapper, script;
   if (!Read("/addon/magisk-30.7.zip", apk, 32 * 1024 * 1024) ||
       Hash(apk) != "e0d32d2123532860f97123d927b1bb86c4e08e6fd8a48bfc6b5bee0afae9ebd5" ||
@@ -818,8 +828,11 @@ bool MagiskInstall() {
   if (!ReadBoot(target, boot) || !m11q::Le32(boot, 16))
     return Fail(
         "No supported boot ramdisk. Use the Magisk App image patching method.");
-  if (!Session("magisk-30.7", dir) || !BootSnapshot(dir, boot, fingerprint))
+  if (backup && (!Session("magisk-30.7", dir) || !BootSnapshot(dir, boot, fingerprint)))
     return false;
+  if (!backup)
+    gui_print("Backup skipped by explicit choice. Original boot bytes are "
+              "held in memory only for this operation.\n");
   gui_print("Installing Magisk 30.7 into boot. Encryption/verity are retained; "
             "recovery/vbmeta are not installer targets.\n");
   struct Env {
@@ -841,19 +854,31 @@ bool MagiskInstall() {
     else
       unsetenv(v.key.c_str());
   }
+  auto rollback = [&]() {
+    Fd fd(open(target.c_str(), O_RDWR | O_CLOEXEC | O_NOFOLLOW));
+    Bytes check;
+    bool restored = fd.n >= 0 && WriteBytes(fd.n, boot.data(), boot.size()) &&
+                    Read(target, check) && Hash(check) == Hash(boot);
+    gui_print("Original boot rollback %s.\n", restored ? "verified" : "FAILED");
+    if (backup)
+      gui_print("Original boot backup: %s/boot.img\n", dir.c_str());
+    else
+      gui_print("No persistent boot backup was created.\n");
+  };
   if (status) {
-    gui_print("Installer failed; original boot backup: %s/boot.img\n",
-              dir.c_str());
+    rollback();
     return Fail("Magisk installation failed; data changes may require cleanup");
   }
   Bytes changed;
   if (!Read(target, changed) || !m11q::ValidBoot(changed, error) ||
-      Hash(changed) == Hash(boot))
+      Hash(changed) == Hash(boot)) {
+    rollback();
     return Fail(
         "Installer reported success but no valid boot change was verified");
-  if (!Save(dir + "/installed-boot.sha256", Hash(changed) + "\n"))
+  }
+  if (backup && !Save(dir + "/installed-boot.sha256", Hash(changed) + "\n"))
     return false;
-  gui_print("Boot readback recorded. Reboot manually; confirm Magisk root in "
+  gui_print("Boot readback verified. Reboot manually; confirm Magisk root in "
             "Android.\n");
   return true;
 }
@@ -876,12 +901,12 @@ int M11qEssentials(const string &operation) {
     ok = RestoreBoot(selected);
   else if (operation == "efs-backup")
     ok = BackupEfs();
-  else if (operation == "stock-restore")
-    ok = PreventStockRestore();
+  else if (operation == "stock-restore" || operation == "stock-restore-no-backup")
+    ok = PreventStockRestore(operation == "stock-restore");
   else if (operation == "avb-status")
     ok = AvbStatus();
-  else if (operation == "avb-prepare")
-    ok = PrepareAvb();
+  else if (operation == "avb-prepare" || operation == "avb-prepare-no-backup")
+    ok = PrepareAvb(operation == "avb-prepare");
   else if (operation == "mount-rw")
     ok = MountRw();
   else if (operation == "modules-list") {
@@ -895,8 +920,8 @@ int M11qEssentials(const string &operation) {
     ok = ModuleRestore(selected);
   else if (operation == "diagnostics")
     ok = Diagnostics();
-  else if (operation == "magisk-install")
-    ok = MagiskInstall();
+  else if (operation == "magisk-install" || operation == "magisk-install-no-backup")
+    ok = MagiskInstall(operation == "magisk-install");
   else
     ok = Fail("Unknown Essentials operation");
   return ok ? 0 : 1;

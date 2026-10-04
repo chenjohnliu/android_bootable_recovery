@@ -64,6 +64,9 @@
 #include "partitions.hpp"
 #ifdef M11Q_RECOVERY_UI
 #include "m11qWipeList.hpp"
+#include "m11qImageFlash.hpp"
+#include <sys/sysmacros.h>
+#include <sys/ioctl.h>
 #endif
 #include "data.hpp"
 #include "startupArgs.hpp"
@@ -3074,6 +3077,85 @@ bool TWPartitionManager::Flash_Image(string& path, string& filename) {
 
 	DataManager::SetProgress(0.0);
 	if (flash_part) {
+#ifdef M11Q_RECOVERY_UI
+		if (M11qExtraImageTarget(flash_part->Mount_Point)) {
+			M11qImageFile image;
+			const string volume_path = M11qImageVolume(flash_part->Mount_Point);
+			TWPartition* volume = volume_path.empty() ? NULL : Find_Partition_By_Path(volume_path);
+			if (!volume_path.empty() && (!volume || !volume->Is_Super)) {
+				gui_err("m11q_img_mapper=Logical image target is unavailable.");
+				return false;
+			}
+			// Bind this alias to the live logical volume, not an old by-name symlink.
+			if (volume) {
+				volume->Find_Actual_Block_Device();
+				flash_part->Set_Block_Device(volume->Actual_Block_Device);
+			}
+			flash_part->Find_Actual_Block_Device();
+			int target = open(flash_part->Actual_Block_Device.c_str(), O_RDONLY | O_CLOEXEC);
+			struct stat target_stat{};
+			uint64_t capacity = 0;
+			int readonly = 1;
+			bool target_ok = target >= 0 && !fstat(target, &target_stat) && S_ISBLK(target_stat.st_mode) &&
+				!ioctl(target, BLKGETSIZE64, &capacity) && !ioctl(target, BLKROGET, &readonly);
+			if (target >= 0) close(target);
+			if (!target_ok || readonly) {
+				gui_err("m11q_img_readonly=Image target is unavailable or read-only; no mapping changes made.");
+				return false;
+			}
+			if (!image.Open(full_filename, capacity)) {
+				if (image.Bytes() > capacity)
+					gui_err("m11q_img_capacity=Expanded image exceeds current partition capacity. No automatic resize.");
+				else
+					gui_err("m11q_img_invalid=Cannot read image or invalid Android sparse image.");
+				return false;
+			}
+			if (!image.Fits(capacity)) {
+				gui_err("m11q_img_capacity=Expanded image exceeds current partition capacity. No automatic resize.");
+				return false;
+			}
+			if (image.OnDevice(target_stat.st_rdev)) {
+				gui_err("m11q_img_source=Move the image outside the partition being flashed.");
+				return false;
+			}
+			// UnMount can return success under never-unmount-system: check actual state too.
+			if (volume && (!volume->UnMount(true) || volume->Is_Mounted())) {
+				gui_err("m11q_img_mounted=Cannot flash a mounted logical partition.");
+				return false;
+			}
+			string mountinfo;
+			if (!android::base::ReadFileToString("/proc/self/mountinfo", &mountinfo) ||
+				M11qDeviceMounted(mountinfo, major(target_stat.st_rdev), minor(target_stat.st_rdev))) {
+				gui_err("m11q_img_other_mount=Image target is still mounted or mount state cannot be checked.");
+				return false;
+			}
+			target = open(flash_part->Actual_Block_Device.c_str(), O_RDWR | O_CLOEXEC);
+			struct stat write_stat{};
+			uint64_t write_capacity = 0;
+			target_ok = target >= 0 && !fstat(target, &write_stat) && S_ISBLK(write_stat.st_mode) &&
+				write_stat.st_rdev == target_stat.st_rdev && !ioctl(target, BLKGETSIZE64, &write_capacity) &&
+				write_capacity == capacity && !ioctl(target, BLKROGET, &readonly) && !readonly;
+			bool result = false;
+			if (target_ok) {
+				LOGINFO("m11q image target '%s': expanded %llu, capacity %llu\n",
+					flash_part->Actual_Block_Device.c_str(), (unsigned long long)image.Bytes(),
+					(unsigned long long)capacity);
+				ProgressTracking image_progress(image.Bytes());
+				image_progress.SetPartitionSize(image.Bytes());
+				gui_msg("m11q_img_verifying=Writing image and verifying written data...");
+				result = image.WriteAndVerify(target, capacity, [&](uint64_t written) {
+					image_progress.UpdateSize(written);
+				});
+			}
+			if (target >= 0) close(target);
+			if (!result) {
+				gui_err("m11q_img_failed=Image write or read-back verification failed.");
+				return false;
+			}
+			gui_highlight("flash_done=IMAGE FLASH COMPLETED]");
+			return true;
+		}
+#endif
 		flash_part->Backup_FileName = filename;
 		if (!flash_part->Flash_Image(&part_settings))
 			return false;

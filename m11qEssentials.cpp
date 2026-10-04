@@ -854,7 +854,7 @@ bool MagiskInstall() {
   if (!Save(dir + "/installed-boot.sha256", Hash(changed) + "\n"))
     return false;
   gui_print("Boot readback recorded. Reboot manually; confirm Magisk root in "
-            "Android. VoLTE requires its separate setup.\n");
+            "Android.\n");
   return true;
 }
 } // namespace

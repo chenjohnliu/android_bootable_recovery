@@ -5,8 +5,12 @@
 #include <string>
 #include <vector>
 namespace m11q {
-inline bool BootloaderUnlocked(const std::string& state, const std::string& verified) {
-  return state == "unlocked" && verified == "orange";
+inline bool BootloaderUnlocked(const std::string& state, const std::string& verified,
+                               const std::string& flash_locked) {
+  // Samsung may omit device_state/flash.locked on subsequent recovery boots.
+  // AOSP defines orange as UNLOCKED; reject any explicit conflicting value.
+  return verified == "orange" && (state.empty() || state == "unlocked") &&
+         (flash_locked.empty() || flash_locked == "0");
 }
 inline uint64_t AvbBe(const std::vector<uint8_t>& b, size_t at, size_t n) {
   uint64_t value = 0;

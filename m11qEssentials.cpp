@@ -173,8 +173,14 @@ bool VerificationDisabled() {
   return true;
 }
 bool UnlockedForBootEdit() {
-  if (!m11q::BootloaderUnlocked(android::base::GetProperty("ro.boot.vbmeta.device_state", ""),
-                               android::base::GetProperty("ro.boot.verifiedbootstate", "")))
+  const string state = android::base::GetProperty("ro.boot.vbmeta.device_state", "");
+  const string verified = android::base::GetProperty("ro.boot.verifiedbootstate", "");
+  const string flash_locked = android::base::GetProperty("ro.boot.flash.locked", "");
+  gui_print("Bootloader state: device_state=%s, verifiedbootstate=%s, flash.locked=%s\n",
+            state.empty() ? "missing" : state.c_str(),
+            verified.empty() ? "missing" : verified.c_str(),
+            flash_locked.empty() ? "missing" : flash_locked.c_str());
+  if (!m11q::BootloaderUnlocked(state, verified, flash_locked))
     return Fail("Bootloader unlock state is not confirmed. No boot or vbmeta changes.");
   return true;
 }

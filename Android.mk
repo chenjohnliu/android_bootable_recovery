@@ -54,6 +54,10 @@ else
 endif
 LOCAL_CFLAGS += -DPLATFORM_SDK_VERSION=$(PLATFORM_SDK_VERSION)
 
+ifeq ($(TARGET_DEVICE),m11q)
+LOCAL_CFLAGS += -DM11Q_RECOVERY_UI
+endif
+
 LOCAL_SRC_FILES := \
     twrp.cpp \
     m11qEssentials.cpp \

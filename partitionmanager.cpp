@@ -62,6 +62,9 @@
 #include "variables.h"
 #include "twcommon.h"
 #include "partitions.hpp"
+#ifdef M11Q_RECOVERY_UI
+#include "m11qWipeList.hpp"
+#endif
 #include "data.hpp"
 #include "startupArgs.hpp"
 #include "twrp-functions.hpp"
@@ -2682,6 +2685,10 @@ void TWPartitionManager::Get_Partition_List(string ListType, std::vector<Partiti
 				Partition_List->push_back(datamedia);
 			}
 		}
+
+#ifdef M11Q_RECOVERY_UI
+		M11qOrderWipeList(*Partition_List);
+#endif
 	} else if (ListType == "flashimg") {
 		for (iter = Partitions.begin(); iter != Partitions.end(); iter++) {
 			if ((*iter)->Can_Flash_Img && (*iter)->Is_Present) {

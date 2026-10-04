@@ -56,6 +56,7 @@ LOCAL_CFLAGS += -DPLATFORM_SDK_VERSION=$(PLATFORM_SDK_VERSION)
 
 LOCAL_SRC_FILES := \
     twrp.cpp \
+    m11qEssentials.cpp \
     fixContexts.cpp \
     twrpTar.cpp \
     exclude.cpp \

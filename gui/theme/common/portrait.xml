@@ -5846,17 +5846,13 @@
 				</actions>
 			</action>
 		</page>
-		<page name="m11q_essentials">
-			<template name="page"/>
-			<text style="text_l">
-				<placement x="%col1_x_header%" y="%row3_header_y%"/>
-				<text>Essentials</text>
-			</text>
-			<button style="main_button_half_height">
-				<placement x="%indent%" y="%row2a_y%"/>
+<page name="m11q_essentials"><template name="page"/>
+<text style="text_l"><placement x="%col1_x_header%" y="%row3_header_y%"/><text>Essentials</text></text>
+<button style="main_button_half_height">
+				<placement x="%indent%" y="%row2a_y%" />
 				<text>Disable FBE</text>
 				<actions>
-					<action function="queueclear"/>
+					<action function="queueclear" />
 					<action function="set">tw_back=m11q_essentials</action>
 					<action function="set">tw_filename=/addon/decrypt.zip</action>
 					<action function="set">tw_action=queuezip</action>
@@ -5874,10 +5870,10 @@
 				</actions>
 			</button>
 			<button style="main_button_half_height">
-				<placement x="%center_x%" y="%row2a_y%"/>
+				<placement x="%center_x%" y="%row2a_y%" />
 				<text>Enable FBE</text>
 				<actions>
-					<action function="queueclear"/>
+					<action function="queueclear" />
 					<action function="set">tw_back=m11q_essentials</action>
 					<action function="set">tw_filename=/addon/encrypt.zip</action>
 					<action function="set">tw_action=queuezip</action>
@@ -5894,25 +5890,9 @@
 					<action function="page">confirm_action</action>
 				</actions>
 			</button>
-			<text style="text_m">
-				<placement x="%center_x%" y="%row8_y%" placement="5"/>
-				<text>Changing mode requires Format Data.</text>
-			</text>
-			<text style="text_m">
-				<placement x="%center_x%" y="%row9_y%" placement="5"/>
-				<text>Format Data erases internal storage.</text>
-			</text>
-			<text style="text_m">
-				<placement x="%center_x%" y="%row11_y%" placement="5"/>
-				<text>Wipe &gt; Format Data &gt; type YES</text>
-			</text>
-			<text style="text_m">
-				<placement x="%center_x%" y="%row13_y%" placement="5"/>
-				<text>Then reboot Recovery before System.</text>
-			</text>
-			<action><touch key="back"/><action function="page">advanced</action></action>
-			<action><touch key="home"/><action function="page">main</action></action>
-		</page>
+			<button style="main_button_half_height"><placement x="%indent%" y="%row4a_y%"/><text>Keep TWRP</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_essentials</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=stock-restore</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Prevent Stock Recovery Restore</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Prevent Stock Recovery Restore</action><action function="set">tw_text1=Prevent Stock Recovery Restore?</action><action function="set">tw_text2=Disables stock recovery restore files.</action><action function="set">tw_text3=Backs up files; leaves KG services intact.</action><action function="set">tw_text4=Requires AVB verification disabled.</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><button style="main_button_half_height"><placement x="%center_x%" y="%row4a_y%"/><text>Magisk 25.2</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_essentials</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=magisk-install</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Install Magisk 25.2</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Install Magisk 25.2</action><action function="set">tw_text1=Install Magisk 25.2?</action><action function="set">tw_text2=Backs up boot before installing root.</action><action function="set">tw_text3=Keeps encryption and verity settings.</action><action function="set">tw_text4=Requires supported boot ramdisk / AVB.</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><button style="main_button_half_height"><placement x="%indent%" y="%row6a_y%"/><text>Android SELinux</text><actions><action function="page">m11q_selinux</action></actions></button><button style="main_button_half_height"><placement x="%center_x%" y="%row6a_y%"/><text>Mount RW</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_essentials</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=mount-rw</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Mount ROM Partitions RW</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Mount ROM Partitions RW</action><action function="set">tw_text1=Mount ROM Partitions RW?</action><action function="set">tw_text2=Makes ROM partitions writable this session.</action><action function="set">tw_text3=Does not change encryption or vbmeta.</action><action function="set">tw_text4=</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><button style="main_button_half_height"><placement x="%indent%" y="%row8a_y%"/><text>Root Modules</text><actions><action function="page">m11q_modules</action></actions></button><button style="main_button_half_height"><placement x="%center_x%" y="%row8a_y%"/><text>Boot Backups</text><actions><action function="page">m11q_boot</action></actions></button><button style="main_button_half_height"><placement x="%indent%" y="%row10a_y%"/><text>Backup EFS</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_essentials</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=efs-backup</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Backup EFS</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Backup EFS</action><action function="set">tw_text1=Backup EFS?</action><action function="set">tw_text2=Saves one sec_efs image and checksum.</action><action function="set">tw_text3=Uses the selected backup storage.</action><action function="set">tw_text4=</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><button style="main_button_half_height"><placement x="%center_x%" y="%row10a_y%"/><text>Diagnostics</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_essentials</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=diagnostics</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Export Diagnostics</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Export Diagnostics</action><action function="set">tw_text1=Export Diagnostics?</action><action function="set">tw_text2=Saves recovery, crypto and boot details.</action><action function="set">tw_text3=Uses the selected backup storage.</action><action function="set">tw_text4=</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><text style="text_m"><placement x="%center_x%" y="%row14_y%" placement="5"/><text>Backups use the selected storage.</text></text><text style="text_m"><placement x="%center_x%" y="%row15_y%" placement="5"/><text>FBE switches require manual Format Data.</text></text><button style="main_button_half_height"><placement x="%indent%" y="%row18a_y%"/><text>Select Storage</text><actions><action function="set">tw_back=m11q_essentials</action><action function="overlay">select_storage</action></actions></button><button style="main_button_half_height"><placement x="%center_x%" y="%row18a_y%"/><text>Back</text><actions><action function="page">advanced</action></actions></button>
+<action><touch key="back"/><action function="page">advanced</action></action>
+<action><touch key="home"/><action function="page">main</action></action></page>
 		<page name="m11q_fbe_install">
 			<template name="page"/>
 			<text style="text_l">
@@ -5957,5 +5937,59 @@
 			</actions></action>
 			<action><touch key="home"/><action function="page">main</action></action>
 		</page>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<page name="m11q_selinux"><template name="page"/>
+<text style="text_l"><placement x="%col1_x_header%" y="%row3_header_y%"/><text>Android SELinux</text></text>
+<button style="main_button_half_height"><placement x="%indent%" y="%row2a_y%"/><text>Enforcing</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_selinux</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=selinux-enforcing</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Android SELinux Enforcing</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Android SELinux Enforcing</action><action function="set">tw_text1=Android SELinux Enforcing?</action><action function="set">tw_text2=Changes Android boot; saves original boot.</action><action function="set">tw_text3=For crDroid / Cherish OS VoLTE debugging.</action><action function="set">tw_text4=Verify getenforce after Android reboot.</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><button style="main_button_half_height"><placement x="%center_x%" y="%row2a_y%"/><text>Permissive</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_selinux</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=selinux-permissive</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Android SELinux Permissive</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Android SELinux Permissive</action><action function="set">tw_text1=Android SELinux Permissive?</action><action function="set">tw_text2=Changes Android boot; saves original boot.</action><action function="set">tw_text3=For crDroid / Cherish OS VoLTE debugging.</action><action function="set">tw_text4=Verify getenforce after Android reboot.</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><button style="main_button_half_height"><placement x="%indent%" y="%row4a_y%"/><text>Restore Setting</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_selinux</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=selinux-restore</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Android SELinux Restore Setting</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Android SELinux Restore Setting</action><action function="set">tw_text1=Android SELinux Restore Setting?</action><action function="set">tw_text2=Changes Android boot; saves original boot.</action><action function="set">tw_text3=For crDroid / Cherish OS VoLTE debugging.</action><action function="set">tw_text4=Verify getenforce after Android reboot.</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><text style="text_m"><placement x="%center_x%" y="%row8_y%" placement="5"/><text>Android setting; recovery mode is separate.</text></text><text style="text_m"><placement x="%center_x%" y="%row9_y%" placement="5"/><text>Requires AVB verification disabled.</text></text><text style="text_m"><placement x="%center_x%" y="%row11_y%" placement="5"/><text>Restore keeps other current boot changes.</text></text>
+<action><touch key="back"/><action function="page">m11q_essentials</action></action>
+<action><touch key="home"/><action function="page">main</action></action></page>
+<page name="m11q_boot"><template name="page"/>
+<text style="text_l"><placement x="%col1_x_header%" y="%row3_header_y%"/><text>Boot Backups</text></text>
+<button style="main_button_half_height"><placement x="%indent%" y="%row2a_y%"/><text>Backup Boot</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_boot</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=boot-backup</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Backup Current Boot</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Backup Current Boot</action><action function="set">tw_text1=Backup Current Boot?</action><action function="set">tw_text2=Saves a verified image with ROM metadata.</action><action function="set">tw_text3=</action><action function="set">tw_text4=</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><button style="main_button_half_height"><placement x="%center_x%" y="%row2a_y%"/><text>Restore Boot</text><actions><action function="set">tw_m11q_file=</action><action function="set">tw_m11q_path=%tw_storage_path%/TWRP/Essentials</action><action function="page">m11q_boot_picker</action></actions></button><text style="text_m"><placement x="%center_x%" y="%row7_y%" placement="5"/><text>Restore accepts verified Essentials backups.</text></text><text style="text_m"><placement x="%center_x%" y="%row8_y%" placement="5"/><text>ROM fingerprint must match the backup.</text></text>
+<action><touch key="back"/><action function="page">m11q_essentials</action></action>
+<action><touch key="home"/><action function="page">main</action></action></page>
+<page name="m11q_boot_picker"><template name="page"/>
+<text style="text_l"><placement x="%col1_x_header%" y="%row3_header_y%"/><text>Restore Boot</text></text>
+<fileselector><placement x="%indent%" y="%row3_y%" w="%content_width%" h="%fileselector_install_height%"/>
+<text>%tw_m11q_path%</text><filter extn=".img" folders="1" files="1"/><path name="tw_m11q_path" default="/sdcard"/>
+<data name="tw_m11q_file"/><selection name="tw_file"/></fileselector>
+<action><condition var1="tw_m11q_file" op="modified"/><actions><action function="queueclear"/><action function="set">tw_back=m11q_boot</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=boot-restore</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Restore Boot</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Restore Boot</action><action function="set">tw_text1=Restore Boot?</action><action function="set">tw_text2=Replaces boot with the selected backup.</action><action function="set">tw_text3=Current boot is backed up first.</action><action function="set">tw_text4=Requires the same ROM and disabled AVB.</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></action>
+<action><touch key="back"/><action function="page">m11q_boot</action></action>
+<action><touch key="home"/><action function="page">main</action></action></page>
+<page name="m11q_modules"><template name="page"/>
+<text style="text_l"><placement x="%col1_x_header%" y="%row3_header_y%"/><text>Root Module Rescue</text></text>
+<button style="main_button_half_height"><placement x="%indent%" y="%row2a_y%"/><text>List Modules</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_modules</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=modules-list</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=List Root Modules</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=List Root Modules</action><action function="set">tw_text1=List Root Modules?</action><action function="set">tw_text2=</action><action function="set">tw_text3=</action><action function="set">tw_text4=</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><button style="main_button_half_height"><placement x="%center_x%" y="%row2a_y%"/><text>Disable All</text><actions><action function="queueclear"/><action function="set">tw_back=m11q_modules</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=modules-disable</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Disable All Root Modules</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Disable All Root Modules</action><action function="set">tw_text1=Disable All Root Modules?</action><action function="set">tw_text2=Disables modules without deleting them.</action><action function="set">tw_text3=Saves previous states for restoration.</action><action function="set">tw_text4=</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></button><button style="main_button_half_height"><placement x="%indent%" y="%row4a_y%"/><text>Choose Module</text><actions><action function="set">tw_m11q_file=</action><action function="set">tw_m11q_path=/data/adb/modules</action><action function="page">m11q_module_picker</action></actions></button><button style="main_button_half_height"><placement x="%center_x%" y="%row4a_y%"/><text>Restore States</text><actions><action function="set">tw_m11q_file=</action><action function="set">tw_m11q_path=%tw_storage_path%/TWRP/Essentials</action><action function="page">m11q_modules_picker</action></actions></button><text style="text_m"><placement x="%center_x%" y="%row8_y%" placement="5"/><text>Decrypt Data before managing modules.</text></text><text style="text_m"><placement x="%center_x%" y="%row9_y%" placement="5"/><text>Choose module.prop to disable one module.</text></text>
+<action><touch key="back"/><action function="page">m11q_essentials</action></action>
+<action><touch key="home"/><action function="page">main</action></action></page>
+<page name="m11q_module_picker"><template name="page"/>
+<text style="text_l"><placement x="%col1_x_header%" y="%row3_header_y%"/><text>Disable Root Module</text></text>
+<fileselector><placement x="%indent%" y="%row3_y%" w="%content_width%" h="%fileselector_install_height%"/>
+<text>%tw_m11q_path%</text><filter extn=".prop" folders="1" files="1"/><path name="tw_m11q_path" default="/data/adb/modules"/>
+<data name="tw_m11q_file"/><selection name="tw_file"/></fileselector>
+<action><condition var1="tw_m11q_file" op="modified"/><actions><action function="queueclear"/><action function="set">tw_back=m11q_modules</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=module-disable</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Disable Root Module</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Disable Root Module</action><action function="set">tw_text1=Disable Root Module?</action><action function="set">tw_text2=Disables the selected module.</action><action function="set">tw_text3=Saves its original enabled/disabled state.</action><action function="set">tw_text4=</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></action>
+<action><touch key="back"/><action function="page">m11q_modules</action></action>
+<action><touch key="home"/><action function="page">main</action></action></page>
+<page name="m11q_modules_picker"><template name="page"/>
+<text style="text_l"><placement x="%col1_x_header%" y="%row3_header_y%"/><text>Restore Module States</text></text>
+<fileselector><placement x="%indent%" y="%row3_y%" w="%content_width%" h="%fileselector_install_height%"/>
+<text>%tw_m11q_path%</text><filter extn=".state" folders="1" files="1"/><path name="tw_m11q_path" default="/sdcard"/>
+<data name="tw_m11q_file"/><selection name="tw_file"/></fileselector>
+<action><condition var1="tw_m11q_file" op="modified"/><actions><action function="queueclear"/><action function="set">tw_back=m11q_modules</action><action function="set">tw_action=m11qessentials</action><action function="set">tw_action_param=modules-restore</action><action function="set">tw_has_action2=0</action><action function="set">tw_has_cancel=0</action><action function="set">tw_operation_state=0</action><action function="set">tw_action_text1=Restore Module States</action><action function="set">tw_action_text2=</action><action function="set">tw_complete_text1=Restore Module States</action><action function="set">tw_text1=Restore Module States?</action><action function="set">tw_text2=Restores the saved module states.</action><action function="set">tw_text3=Module identity must match the backup.</action><action function="set">tw_text4=</action><action function="set">tw_slider_text=Swipe to Continue</action><action function="page">confirm_action</action></actions></action>
+<action><touch key="back"/><action function="page">m11q_modules</action></action>
+<action><touch key="home"/><action function="page">main</action></action></page>
 	</pages>
 </recovery>

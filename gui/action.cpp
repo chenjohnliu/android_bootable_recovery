@@ -41,6 +41,7 @@
 #include "../partitions.hpp"
 #include "../twrp-functions.hpp"
 #include "../twrpRepacker.hpp"
+#include "../m11qEssentials.hpp"
 #include "../openrecoveryscript.hpp"
 
 #include "twinstall/adb_install.h"
@@ -221,6 +222,7 @@ GUIAction::GUIAction(xml_node<>* node)
 		ADD_ACTION(refreshsizes);
 		ADD_ACTION(nandroid);
 		ADD_ACTION(fixcontexts);
+		ADD_ACTION(m11qessentials);
 		ADD_ACTION(fixpermissions);
 		ADD_ACTION(dd);
 		ADD_ACTION(partitionsd);
@@ -1320,6 +1322,15 @@ int GUIAction::cancelbackup(std::string arg __unused) {
 	}
 
 	return 0;
+}
+
+int GUIAction::m11qessentials(std::string arg) {
+    operation_start(DataManager::GetStrValue("tw_action_text1"));
+    int status = 0;
+    if (simulate) simulate_progress_bar();
+    else status = M11qEssentials(arg);
+    operation_end(status);
+    return status;
 }
 
 int GUIAction::fixcontexts(std::string arg __unused)

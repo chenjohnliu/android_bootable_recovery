@@ -343,6 +343,7 @@ protected:
 	int refreshsizes(std::string arg);
 	int nandroid(std::string arg);
 	int fixcontexts(std::string arg);
+	int m11qessentials(std::string arg);
 	int fixpermissions(std::string arg);
 	int dd(std::string arg);
 	int partitionsd(std::string arg);
